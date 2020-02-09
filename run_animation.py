@@ -345,20 +345,23 @@ for i in range(len(all_input_paths)):
 
 input_paths.sort(key=human_sorting)
 
-all_ground_truth_paths = os.listdir(ground_truth_path)
-ground_truth_paths = []
+ground_truth_paths = None
 
-for i in range(len(all_ground_truth_paths)):
-    current_ground_truth_path = all_ground_truth_paths[i].rstrip()
+if ground_truth_path != "None":
+    all_ground_truth_paths = os.listdir(ground_truth_path)
+    ground_truth_paths = []
 
-    if len(current_ground_truth_path.split(ground_truth_file_type)) > 1:
-        if ground_truth_prefix_bool:
-            if len(current_ground_truth_path.split(ground_truth_prefix)) > 1:
+    for i in range(len(all_ground_truth_paths)):
+        current_ground_truth_path = all_ground_truth_paths[i].rstrip()
+
+        if len(current_ground_truth_path.split(ground_truth_file_type)) > 1:
+            if ground_truth_prefix_bool:
+                if len(current_ground_truth_path.split(ground_truth_prefix)) > 1:
+                    ground_truth_paths.append("{0}/{1}".format(ground_truth_path, current_ground_truth_path))
+            else:
                 ground_truth_paths.append("{0}/{1}".format(ground_truth_path, current_ground_truth_path))
-        else:
-            ground_truth_paths.append("{0}/{1}".format(ground_truth_path, current_ground_truth_path))
 
-ground_truth_paths.sort(key=human_sorting)
+    ground_truth_paths.sort(key=human_sorting)
 
 if not os.path.exists(output_path):
     os.makedirs(output_path)
@@ -371,29 +374,31 @@ for i in range(len(input_paths)):
         imresize(input_slice, (int(round(input_slice.shape[0] * 3.27)), int(round(input_slice.shape[1] * 2.1306)))),
         0.0, 1.0)
 
-    ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, slice_position, :])
-    ground_truth_slice = rescale_linear(imresize(ground_truth_slice, (
-        int(round(ground_truth_slice.shape[0] * 3.27)), int(round(ground_truth_slice.shape[1] * 2.1306)))), 0.0, 1.0)
+    if ground_truth_paths is not None:
+        ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, slice_position, :])
+        ground_truth_slice = rescale_linear(imresize(ground_truth_slice, (
+            int(round(ground_truth_slice.shape[0] * 3.27)), int(round(ground_truth_slice.shape[1] * 2.1306)))), 0.0, 1.0)
 
-    difference_slice = ground_truth_slice - input_slice
+        difference_slice = ground_truth_slice - input_slice
 
-    red_difference_slice = difference_slice.copy()
-    red_difference_slice[red_difference_slice < 0.0] = 0.0
-    red_difference_slice = rescale_linear(red_difference_slice, 0.0, 1.0)
+        red_difference_slice = difference_slice.copy()
+        red_difference_slice[red_difference_slice < 0.0] = 0.0
+        red_difference_slice = rescale_linear(red_difference_slice, 0.0, 1.0)
 
-    green_difference_slice = np.zeros(difference_slice.shape)
+        blue_difference_slice = difference_slice.copy()
+        blue_difference_slice[blue_difference_slice > 0.0] = 0.0
+        blue_difference_slice = rescale_linear(np.absolute(blue_difference_slice), 0.0, 1.0)
 
-    blue_difference_slice = difference_slice.copy()
-    blue_difference_slice[blue_difference_slice > 0.0] = 0.0
-    blue_difference_slice = rescale_linear(np.absolute(blue_difference_slice), 0.0, 1.0)
+        difference_slice = np.zeros(difference_slice.shape)
 
-    red_slices = np.vstack((ground_truth_slice, red_difference_slice, input_slice))
-    green_slices = np.vstack((ground_truth_slice, green_difference_slice, input_slice))
-    blue_slices = np.vstack((ground_truth_slice, blue_difference_slice, input_slice))
+        red_slices = np.vstack((ground_truth_slice, red_difference_slice, input_slice))
+        green_slices = np.vstack((ground_truth_slice, difference_slice, input_slice))
+        blue_slices = np.vstack((ground_truth_slice, blue_difference_slice, input_slice))
 
-    frame = np.array((red_slices, green_slices, blue_slices))
-
-    frame_image = toimage(frame)
+        frame_image = toimage(np.array((red_slices, green_slices, blue_slices)))
+    else:
+        frame_image = toimage(np.array((input_slice, input_slice, input_slice)))
+        
     frame_image.save("{0}/{1}.png".format(output_path, str(i)))
 
     frames.append(frame_image)

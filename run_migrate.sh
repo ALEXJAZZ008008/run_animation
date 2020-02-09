@@ -18,11 +18,11 @@ rm -rf "$OUTPUTPATH"
 echo -e 'make '"$OUTPUTPATH"'\n'
 mkdir -p "$OUTPUTPATH"
 
-if [ -d "$INPUTPATH"'/gated_ground_truth/' ]
+if [ -d "$INPUTPATH"'/gated_ground_truth/dynamic/' ]
 then
     echo -e "make only gated directory and move results\n"
     mkdir -p "$OUTPUTPATH"'/gated_ground_truth/'
-    cp -a "$INPUTPATH"'/gated_ground_truth/.' "$OUTPUTPATH"'/gated_ground_truth/'
+    cp -a "$INPUTPATH"'/gated_ground_truth/dynamic/.' "$OUTPUTPATH"'/gated_ground_truth/'
 fi
 
 if [ -d "$INPUTPATH"'/cropped_input/dynamic_volumes/dynamic/' ]

@@ -16,7 +16,7 @@ echo -e "run run migrate\n"
 if [ -d "$OUTPUTPATH"'/gated_ground_truth/' ]
 then
     echo -e "run run animation on gated ground truth\n"
-    python3.6 ./run_animation.py "$OUTPUTPATH"'/gated_ground_truth/' "$OUTPUTPATH"'/gated_ground_truth/' "$OUTPUTPATH"'/gated_ground_truth_output/' "gated_ground_truth_output.gif" True "fixed" ".nii" True "fixed" ".nii" 133 0.5
+    python3.6 ./run_animation.py "$OUTPUTPATH"'/gated_ground_truth/' None "$OUTPUTPATH"'/gated_ground_truth_output/' "gated_ground_truth_output.gif" True "fixed" ".nii" True "fixed" ".nii" 125 0.5
 fi
 
 if [ -d "$OUTPUTPATH"'/momo_cropped_input/' ]
