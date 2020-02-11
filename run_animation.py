@@ -32,6 +32,10 @@ def rescale_linear(array, new_min, new_max):
 
 
 # https://github.com/scipy/scipy/blob/v1.2.1/scipy/misc/pilutil.py#L510-L566
+_errstr = "Mode is unknown or incompatible with input array shape."
+
+
+# https://github.com/scipy/scipy/blob/v1.2.1/scipy/misc/pilutil.py#L510-L566
 def bytescale(data, cmin=None, cmax=None, high=255, low=0):
     """
     Byte scales an array (image).
@@ -372,22 +376,22 @@ for i in range(len(input_paths)):
     input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[:, slice_position, :])
     input_slice = rescale_linear(
         imresize(input_slice, (int(round(input_slice.shape[0] * 3.27)), int(round(input_slice.shape[1] * 2.1306)))),
-        0.0, 1.0)
+        0, 255)
 
     if ground_truth_paths is not None:
         ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, slice_position, :])
         ground_truth_slice = rescale_linear(imresize(ground_truth_slice, (
-            int(round(ground_truth_slice.shape[0] * 3.27)), int(round(ground_truth_slice.shape[1] * 2.1306)))), 0.0, 1.0)
+            int(round(ground_truth_slice.shape[0] * 3.27)), int(round(ground_truth_slice.shape[1] * 2.1306)))), 0, 255)
 
         difference_slice = ground_truth_slice - input_slice
 
         red_difference_slice = difference_slice.copy()
         red_difference_slice[red_difference_slice < 0.0] = 0.0
-        red_difference_slice = rescale_linear(red_difference_slice, 0.0, 1.0)
+        red_difference_slice = rescale_linear(red_difference_slice, 0, 255)
 
         blue_difference_slice = difference_slice.copy()
         blue_difference_slice[blue_difference_slice > 0.0] = 0.0
-        blue_difference_slice = rescale_linear(np.absolute(blue_difference_slice), 0.0, 1.0)
+        blue_difference_slice = rescale_linear(np.absolute(blue_difference_slice), 0, 255)
 
         difference_slice = np.zeros(difference_slice.shape)
 
