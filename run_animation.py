@@ -23,12 +23,97 @@ def human_sorting(string):
 
 
 # https://stackoverflow.com/questions/36000843/scale-np-array-to-certain-range
-def rescale_linear(array, new_min, new_max):
+def rescale_linear_max_min(array, new_min, new_max):
+    print("rescale_linear")
+
     """Rescale an arrary linearly."""
     minimum, maximum = np.min(array), np.max(array)
     m = (new_max - new_min) / (maximum - minimum)
     b = new_min - m * minimum
-    return m * array + b
+    output = m * array + b
+
+    return output
+
+
+# https://stackoverflow.com/questions/36000843/scale-np-array-to-certain-range
+def rescale_linear_max_min_with_known_max_min(array, new_min, new_max, input_min, input_max):
+    print("rescale_linear_with_known_max_min")
+
+    """Rescale an arrary linearly."""
+    m = (new_max - new_min) / (input_max - input_min)
+    b = new_min - m * input_min
+    output = m * array + b
+
+    return output
+
+
+# https://stackoverflow.com/questions/36000843/scale-np-array-to-certain-range
+def rescale_linear_sum_min(array, new_min, new_sum):
+    print("rescale_linear")
+
+    """Rescale an arrary linearly."""
+    minimum, maximum = np.min(array), np.nansum(array)
+    m = (new_sum - new_min) / (maximum - minimum)
+    b = new_min - m * minimum
+    output = m * array + b
+
+    return output
+
+
+# https://stackoverflow.com/questions/36000843/scale-np-array-to-certain-range
+def rescale_linear_sum_min_with_known_sum_min(array, new_min, new_sum, input_min, input_sum):
+    print("rescale_linear_with_known_max_min")
+
+    """Rescale an arrary linearly."""
+    m = (new_sum - new_min) / (input_sum - input_min)
+    b = new_min - m * input_min
+    output = m * array + b
+
+    return output
+
+
+def rescale_array_path(data_array, data_type):
+    print("rescale_array_path")
+
+    new_data_array = data_array.copy()
+
+    for i in range(len(new_data_array)):
+        current_data_array = new_data_array[i]
+
+        current_data_array = rescale_linear_max_min(current_data_array, 0.0, 1.0)
+
+        new_data_array[i] = current_data_array
+
+    return new_data_array
+
+
+def rescale_array_array_path(data_array):
+    print("rescale_array_array_path")
+
+    new_data_array = data_array.copy()
+
+    current_data_array = new_data_array[0]
+
+    current_max = np.max(current_data_array)
+    current_min = np.min(current_data_array)
+
+    for i in range(1, len(new_data_array)):
+        current_data_array = new_data_array[i]
+
+        new_max = np.max(current_data_array)
+        new_min = np.min(current_data_array)
+
+        if new_max > current_max:
+            current_max = new_max
+
+        if new_min < current_min:
+            current_min = new_min
+
+    for i in range(len(new_data_array)):
+        new_data_array[i] = rescale_linear_max_min_with_known_max_min(new_data_array[i], 0.0, 255.0, current_min,
+                                                                      current_max)
+
+    return new_data_array
 
 
 # https://github.com/scipy/scipy/blob/v1.2.1/scipy/misc/pilutil.py#L510-L566
@@ -321,91 +406,237 @@ def imresize(arr, size, interp='bilinear', mode=None):
     return fromimage(imnew)
 
 
-input_path = sys.argv[1]
-ground_truth_path = sys.argv[2]
-output_path = sys.argv[3]
-output_name = sys.argv[4]
-input_prefix_bool = bool(distutils.util.strtobool(sys.argv[5]))
-input_prefix = sys.argv[6]
-input_file_type = sys.argv[7]
-ground_truth_prefix_bool = bool(distutils.util.strtobool(sys.argv[8]))
-ground_truth_prefix = sys.argv[9]
-ground_truth_file_type = sys.argv[10]
-slice_position = int(sys.argv[11])
-frame_time = float(sys.argv[12])
+def main():
+    input_path = sys.argv[1]
+    ground_truth_path = sys.argv[2]
+    output_path = sys.argv[3]
+    output_name = sys.argv[4]
+    input_prefix_bool = bool(distutils.util.strtobool(sys.argv[5]))
+    input_prefix = sys.argv[6]
+    input_file_type = sys.argv[7]
+    ground_truth_prefix_bool = bool(distutils.util.strtobool(sys.argv[8]))
+    ground_truth_prefix = sys.argv[9]
+    ground_truth_file_type = sys.argv[10]
+    pixel_width = float(sys.argv[11])
+    slice_width = float(sys.argv[12])
+    slice_axis = int(int(sys.argv[13]))
+    slice_position = int(sys.argv[14])
+    rescale_array_bool = bool(distutils.util.strtobool(sys.argv[15]))
+    frame_time = float(sys.argv[16])
 
-all_input_paths = os.listdir(input_path)
-input_paths = []
+    all_input_paths = os.listdir(input_path)
+    input_paths = []
 
-for i in range(len(all_input_paths)):
-    current_input_path = all_input_paths[i].rstrip()
+    # get input data
+    for i in range(len(all_input_paths)):
+        current_input_path = all_input_paths[i].rstrip()
 
-    if len(current_input_path.split(input_file_type)) > 1:
-        if input_prefix_bool:
-            if len(current_input_path.split(input_prefix)) > 1:
-                input_paths.append("{0}/{1}".format(input_path, current_input_path))
-        else:
-            input_paths.append("{0}/{1}".format(input_path, current_input_path))
-
-input_paths.sort(key=human_sorting)
-
-ground_truth_paths = None
-
-if ground_truth_path != "None":
-    all_ground_truth_paths = os.listdir(ground_truth_path)
-    ground_truth_paths = []
-
-    for i in range(len(all_ground_truth_paths)):
-        current_ground_truth_path = all_ground_truth_paths[i].rstrip()
-
-        if len(current_ground_truth_path.split(ground_truth_file_type)) > 1:
-            if ground_truth_prefix_bool:
-                if len(current_ground_truth_path.split(ground_truth_prefix)) > 1:
-                    ground_truth_paths.append("{0}/{1}".format(ground_truth_path, current_ground_truth_path))
+        if len(current_input_path.split(input_file_type)) > 1:
+            if input_prefix_bool:
+                if len(current_input_path.split(input_prefix)) > 1:
+                    input_paths.append("{0}/{1}".format(input_path, current_input_path))
             else:
-                ground_truth_paths.append("{0}/{1}".format(ground_truth_path, current_ground_truth_path))
+                input_paths.append("{0}/{1}".format(input_path, current_input_path))
 
-    ground_truth_paths.sort(key=human_sorting)
+    input_paths.sort(key=human_sorting)
 
-if not os.path.exists(output_path):
-    os.makedirs(output_path)
+    ground_truth_paths = None
 
-frames = []
+    # get ground truth path if exists
+    if ground_truth_path != "None":
+        all_ground_truth_paths = os.listdir(ground_truth_path)
+        ground_truth_paths = []
 
-for i in range(len(input_paths)):
-    input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[:, slice_position, :])
-    input_slice = rescale_linear(
-        imresize(input_slice, (int(round(input_slice.shape[0] * 3.27)), int(round(input_slice.shape[1] * 2.1306)))),
-        0, 255)
+        for i in range(len(all_ground_truth_paths)):
+            current_ground_truth_path = all_ground_truth_paths[i].rstrip()
 
-    if ground_truth_paths is not None:
-        ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, slice_position, :])
-        ground_truth_slice = rescale_linear(imresize(ground_truth_slice, (
-            int(round(ground_truth_slice.shape[0] * 3.27)), int(round(ground_truth_slice.shape[1] * 2.1306)))), 0, 255)
+            if len(current_ground_truth_path.split(ground_truth_file_type)) > 1:
+                if ground_truth_prefix_bool:
+                    if len(current_ground_truth_path.split(ground_truth_prefix)) > 1:
+                        ground_truth_paths.append("{0}/{1}".format(ground_truth_path, current_ground_truth_path))
+                else:
+                    ground_truth_paths.append("{0}/{1}".format(ground_truth_path, current_ground_truth_path))
 
-        difference_slice = ground_truth_slice - input_slice
+        ground_truth_paths.sort(key=human_sorting)
 
-        red_difference_slice = difference_slice.copy()
-        red_difference_slice[red_difference_slice < 0.0] = 0.0
-        red_difference_slice = rescale_linear(red_difference_slice, 0, 255)
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
 
-        blue_difference_slice = difference_slice.copy()
-        blue_difference_slice[blue_difference_slice > 0.0] = 0.0
-        blue_difference_slice = rescale_linear(np.absolute(blue_difference_slice), 0, 255)
+    frames = []
 
-        difference_slice = np.zeros(difference_slice.shape)
+    if rescale_array_bool:
+        # rescale entire array
+        input_slice_list = []
+        ground_truth_slice_list = []
 
-        red_slices = np.vstack((ground_truth_slice, red_difference_slice, input_slice))
-        green_slices = np.vstack((ground_truth_slice, difference_slice, input_slice))
-        blue_slices = np.vstack((ground_truth_slice, blue_difference_slice, input_slice))
+        for i in range(len(input_paths)):
+            input_slice = None
 
-        frame_image = toimage(np.array((red_slices, green_slices, blue_slices)))
+            if slice_axis == 0:
+                input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[slice_position, :, :])
+                input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * pixel_width)), int(round(input_slice.shape[1] * pixel_width))))
+            else:
+                if slice_axis == 1:
+                    input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[:, slice_position, :])
+                    input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * slice_width)), int(round(input_slice.shape[1] * pixel_width))))
+                else:
+                    if slice_axis == 2:
+                        input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[:, :, slice_position])
+                        input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * slice_width)), int(round(input_slice.shape[1] * pixel_width))))
+
+            input_slice_list.append(input_slice)
+
+            if ground_truth_paths is not None:
+                ground_truth_slice = None
+
+                if slice_axis == 0:
+                    ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[slice_position, :, :])
+                    ground_truth_slice = imresize(ground_truth_slice, (int(round(ground_truth_slice.shape[0] * pixel_width)), int(round(ground_truth_slice.shape[1] * pixel_width))))
+                else:
+                    if slice_axis == 1:
+                        ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, slice_position, :])
+                        ground_truth_slice = imresize(ground_truth_slice, (int(round(ground_truth_slice.shape[0] * slice_width)), int(round(ground_truth_slice.shape[1] * pixel_width))))
+                    else:
+                        if slice_axis == 2:
+                            ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, :, slice_position])
+                            ground_truth_slice = imresize(ground_truth_slice, (int(round(ground_truth_slice.shape[0] * slice_width)), int(round(ground_truth_slice.shape[1] * pixel_width))))
+
+                ground_truth_slice_list.append(ground_truth_slice)
+
+        input_slice_array = np.asfarray(input_slice_list)
+        input_slice_array = rescale_array_array_path(input_slice_array)
+
+        if ground_truth_paths is not None:
+            ground_truth_slice_array = np.asfarray(ground_truth_slice_list)
+            ground_truth_slice_array = rescale_array_array_path(ground_truth_slice_array)
+
+            difference_slice_list = []
+            red_difference_slice_list = []
+            blue_difference_slice_list = []
+
+            for i in range(len(input_slice_array)):
+                difference_slice = ground_truth_slice_array[i] - input_slice_array[i]
+
+                red_difference_slice = difference_slice.copy()
+                red_difference_slice[red_difference_slice < 0.0] = 0.0
+
+                red_difference_slice_list.append(red_difference_slice)
+
+                blue_difference_slice = difference_slice.copy()
+                blue_difference_slice[blue_difference_slice > 0.0] = 0.0
+                blue_difference_slice = np.abs(blue_difference_slice)
+
+                blue_difference_slice_list.append(blue_difference_slice)
+
+                difference_slice = np.zeros(difference_slice.shape)
+
+                difference_slice_list.append(difference_slice)
+
+            difference_slice_array = np.asfarray(difference_slice_list)
+
+            red_difference_slice_array = np.asfarray(red_difference_slice_list)
+            red_difference_slice_array = rescale_array_array_path(red_difference_slice_array)
+
+            blue_difference_slice_array = np.asfarray(blue_difference_slice_list)
+            blue_difference_slice_array = rescale_array_array_path(blue_difference_slice_array)
+
+            for i in range(len(input_slice_array)):
+                red_slices = np.vstack(
+                    (ground_truth_slice_array[i], red_difference_slice_array[i], input_slice_array[i]))
+                green_slices = np.vstack((ground_truth_slice_array[i], difference_slice_array[i], input_slice_array[i]))
+                blue_slices = np.vstack(
+                    (ground_truth_slice_array[i], blue_difference_slice_array[i], input_slice_array[i]))
+
+                frame_image = toimage(np.array((red_slices, green_slices, blue_slices)))
+
+                frame_image.save("{0}/{1}.png".format(output_path, str(i)))
+
+                frames.append(frame_image)
+        else:
+            for i in range(len(input_slice_array)):
+                frame_image = toimage(np.array((input_slice_array[i], input_slice_array[i], input_slice_array[i])))
+
+                frame_image.save("{0}/{1}.png".format(output_path, str(i)))
+
+                frames.append(frame_image)
     else:
-        frame_image = toimage(np.array((input_slice, input_slice, input_slice)))
-        
-    frame_image.save("{0}/{1}.png".format(output_path, str(i)))
+        # rescale individually
+        for i in range(len(input_paths)):
+            input_slice = None
 
-    frames.append(frame_image)
+            if slice_axis == 0:
+                input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[slice_position, :, :])
+                input_slice = imresize(input_slice, (
+                int(round(input_slice.shape[0] * pixel_width)), int(round(input_slice.shape[1] * pixel_width))))
+            else:
+                if slice_axis == 1:
+                    input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[:, slice_position, :])
+                    input_slice = imresize(input_slice, (
+                    int(round(input_slice.shape[0] * slice_width)), int(round(input_slice.shape[1] * pixel_width))))
+                else:
+                    if slice_axis == 2:
+                        input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[:, :, slice_position])
+                        input_slice = imresize(input_slice, (
+                        int(round(input_slice.shape[0] * slice_width)), int(round(input_slice.shape[1] * pixel_width))))
 
-frames[0].save("{0}/{1}".format(output_path, str(output_name)), format="GIF", append_images=frames[1:], save_all=True,
-               duration=int(round(1000 * frame_time)), loop=0)
+            input_slice = rescale_linear_max_min(input_slice, 0, 255)
+
+            if ground_truth_paths is not None:
+                ground_truth_slice = None
+
+                if slice_axis == 1:
+                    ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[slice_position, :, :])
+                    ground_truth_slice = imresize(ground_truth_slice, (
+                    int(round(ground_truth_slice.shape[0] * pixel_width)),
+                    int(round(ground_truth_slice.shape[1] * pixel_width))))
+                else:
+                    if slice_axis == 2:
+                        ground_truth_slice = np.flip(
+                            pet.ImageData(ground_truth_paths[i]).as_array()[:, slice_position, :])
+                        ground_truth_slice = imresize(ground_truth_slice, (
+                        int(round(ground_truth_slice.shape[0] * slice_width)),
+                        int(round(ground_truth_slice.shape[1] * pixel_width))))
+                    else:
+                        if slice_axis == 3:
+                            ground_truth_slice = np.flip(
+                                pet.ImageData(ground_truth_paths[i]).as_array()[:, :, slice_position])
+                            ground_truth_slice = imresize(ground_truth_slice, (
+                            int(round(ground_truth_slice.shape[0] * slice_width)),
+                            int(round(ground_truth_slice.shape[1] * pixel_width))))
+
+                ground_truth_slice = rescale_linear_max_min(ground_truth_slice, 0, 255)
+
+                difference_slice = ground_truth_slice - input_slice
+
+                red_difference_slice = difference_slice.copy()
+                red_difference_slice[red_difference_slice < 0.0] = 0.0
+                red_difference_slice = rescale_linear_max_min(red_difference_slice, 0, 255)
+
+                blue_difference_slice = difference_slice.copy()
+                blue_difference_slice[blue_difference_slice > 0.0] = 0.0
+                blue_difference_slice = rescale_linear_max_min(np.abs(blue_difference_slice), 0, 255)
+
+                difference_slice = np.zeros(difference_slice.shape)
+
+                red_slices = np.vstack((ground_truth_slice, red_difference_slice, input_slice))
+                green_slices = np.vstack((ground_truth_slice, difference_slice, input_slice))
+                blue_slices = np.vstack((ground_truth_slice, blue_difference_slice, input_slice))
+
+                frame_image = toimage(np.array((red_slices, green_slices, blue_slices)))
+            else:
+                frame_image = toimage(np.array((input_slice, input_slice, input_slice)))
+
+            # output png
+            frame_image.save("{0}/{1}.png".format(output_path, str(i)))
+
+            frames.append(frame_image)
+
+    # output gif
+    frames[0].save("{0}/{1}".format(output_path, str(output_name)), format="GIF", append_images=frames[1:],
+                   save_all=True,
+                   duration=int(round(1000 * frame_time)), loop=0)
+
+    return True
+
+
+main()
