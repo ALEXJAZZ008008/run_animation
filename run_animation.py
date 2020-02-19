@@ -24,8 +24,6 @@ def human_sorting(string):
 
 # https://stackoverflow.com/questions/36000843/scale-np-array-to-certain-range
 def rescale_linear_max_min(array, new_min, new_max):
-    print("rescale_linear")
-
     """Rescale an arrary linearly."""
     minimum, maximum = np.min(array), np.max(array)
     m = (new_max - new_min) / (maximum - minimum)
@@ -37,8 +35,6 @@ def rescale_linear_max_min(array, new_min, new_max):
 
 # https://stackoverflow.com/questions/36000843/scale-np-array-to-certain-range
 def rescale_linear_max_min_with_known_max_min(array, new_min, new_max, input_min, input_max):
-    print("rescale_linear_with_known_max_min")
-
     """Rescale an arrary linearly."""
     m = (new_max - new_min) / (input_max - input_min)
     b = new_min - m * input_min
@@ -49,8 +45,6 @@ def rescale_linear_max_min_with_known_max_min(array, new_min, new_max, input_min
 
 # https://stackoverflow.com/questions/36000843/scale-np-array-to-certain-range
 def rescale_linear_sum_min(array, new_min, new_sum):
-    print("rescale_linear")
-
     """Rescale an arrary linearly."""
     minimum, maximum = np.min(array), np.nansum(array)
     m = (new_sum - new_min) / (maximum - minimum)
@@ -62,8 +56,6 @@ def rescale_linear_sum_min(array, new_min, new_sum):
 
 # https://stackoverflow.com/questions/36000843/scale-np-array-to-certain-range
 def rescale_linear_sum_min_with_known_sum_min(array, new_min, new_sum, input_min, input_sum):
-    print("rescale_linear_with_known_max_min")
-
     """Rescale an arrary linearly."""
     m = (new_sum - new_min) / (input_sum - input_min)
     b = new_min - m * input_min
@@ -73,8 +65,6 @@ def rescale_linear_sum_min_with_known_sum_min(array, new_min, new_sum, input_min
 
 
 def rescale_array_path(data_array, data_type):
-    print("rescale_array_path")
-
     new_data_array = data_array.copy()
 
     for i in range(len(new_data_array)):
@@ -88,8 +78,6 @@ def rescale_array_path(data_array, data_type):
 
 
 def rescale_array_array_path(data_array):
-    print("rescale_array_array_path")
-
     new_data_array = data_array.copy()
 
     current_data_array = new_data_array[0]
@@ -110,8 +98,7 @@ def rescale_array_array_path(data_array):
             current_min = new_min
 
     for i in range(len(new_data_array)):
-        new_data_array[i] = rescale_linear_max_min_with_known_max_min(new_data_array[i], 0.0, 255.0, current_min,
-                                                                      current_max)
+        new_data_array[i] = rescale_linear_max_min_with_known_max_min(new_data_array[i], 0.0, 255.0, current_min, current_max)
 
     return new_data_array
 
