@@ -18,6 +18,13 @@ rm -rf "$OUTPUTPATH"
 echo -e 'make '"$OUTPUTPATH"'\n'
 mkdir -p "$OUTPUTPATH"
 
+if [ -d "$INPUTPATH"'/attenuation/' ]
+then
+    echo -e "make attenuation directory and move results\n"
+    mkdir -p "$OUTPUTPATH"'/attenuation/'
+    rsync -vaOzhP --no-p --no-g --no-o --append-verify --inplace "$INPUTPATH"'/attenuation/.' "$OUTPUTPATH"'/attenuation/'
+fi
+
 if [ -d "$INPUTPATH"'/gated_ground_truth/dynamic/' ]
 then
     echo -e "make only gated directory and move results\n"
