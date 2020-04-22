@@ -13,6 +13,12 @@ echo -e "run run migrate\n"
 
 ./run_migrate.sh $INPUTPATH $OUTPUTPATH
 
+if [ -d "$OUTPUTPATH"'/cropped_attenuation/' ]
+then
+    echo -e "run run animation on cropped attenuation\n"
+    python3.6 ./run_animation.py "$OUTPUTPATH"'/cropped_attenuation/' None "$OUTPUTPATH"'/cropped_attenuation_output/' "cropped_attenuation_output.gif" False None ".nii" False None None 2.1306 3.27 1 125 True 0.5
+fi
+
 if [ -d "$OUTPUTPATH"'/attenuation/' ]
 then
     echo -e "run run animation on attenuation\n"
