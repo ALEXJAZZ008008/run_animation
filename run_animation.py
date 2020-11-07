@@ -393,23 +393,42 @@ def imresize(arr, size, interp='bilinear', mode=None):
     return fromimage(imnew)
 
 
-def main():
-    input_path = sys.argv[1]
-    ground_truth_path = sys.argv[2]
-    output_path = sys.argv[3]
-    output_name = sys.argv[4]
-    input_prefix_bool = bool(distutils.util.strtobool(sys.argv[5]))
-    input_prefix = sys.argv[6]
-    input_file_type = sys.argv[7]
-    ground_truth_prefix_bool = bool(distutils.util.strtobool(sys.argv[8]))
-    ground_truth_prefix = sys.argv[9]
-    ground_truth_file_type = sys.argv[10]
-    pixel_width = float(sys.argv[11])
-    slice_width = float(sys.argv[12])
-    slice_axis = int(int(sys.argv[13]))
-    slice_position = int(sys.argv[14])
-    rescale_array_bool = bool(distutils.util.strtobool(sys.argv[15]))
-    frame_time = float(sys.argv[16])
+def main(input_path=None, ground_truth_path=None, output_path=None, output_name=None, input_prefix_bool=None,
+         input_prefix=None, input_file_type=None, ground_truth_prefix_bool=None, ground_truth_prefix=None,
+         ground_truth_file_type=None, pixel_width=None, slice_width=None, slice_axis=None, slice_position=None,
+         rescale_array_bool=None, frame_time=None):
+    np.seterr(all="print")
+    
+    if input_path == None or ground_truth_path == None or output_path == None or output_name == None or \
+        input_prefix_bool == None or input_prefix == None or input_file_type == None or \
+        ground_truth_prefix_bool == None or ground_truth_prefix == None or ground_truth_file_type == None or \
+        pixel_width == None or slice_width == None or slice_axis == None or slice_position == None or \
+        rescale_array_bool == None or frame_time == None:
+        input_path = sys.argv[1]
+        ground_truth_path = sys.argv[2]
+        output_path = sys.argv[3]
+        output_name = sys.argv[4]
+        input_prefix_bool = bool(distutils.util.strtobool(sys.argv[5]))
+        input_prefix = sys.argv[6]
+        input_file_type = sys.argv[7]
+        ground_truth_prefix_bool = bool(distutils.util.strtobool(sys.argv[8]))
+        ground_truth_prefix = sys.argv[9]
+        ground_truth_file_type = sys.argv[10]
+        pixel_width = float(sys.argv[11])
+        slice_width = float(sys.argv[12])
+        slice_axis = int(sys.argv[13])
+        slice_position = int(sys.argv[14])
+        rescale_array_bool = bool(distutils.util.strtobool(sys.argv[15]))
+        frame_time = float(sys.argv[16])
+    else:
+        input_prefix_bool = bool(distutils.util.strtobool(input_prefix_bool))
+        ground_truth_prefix_bool = bool(distutils.util.strtobool(ground_truth_prefix_bool))
+        pixel_width = float(pixel_width)
+        slice_width = float(slice_width)
+        slice_axis = int(slice_axis)
+        slice_position = int(slice_position)
+        rescale_array_bool = bool(distutils.util.strtobool(rescale_array_bool))
+        frame_time = float(frame_time)
 
     all_input_paths = os.listdir(input_path)
     input_paths = []
@@ -528,20 +547,18 @@ def main():
             blue_difference_slice_array = rescale_array_array_path(blue_difference_slice_array)
 
             for i in range(len(input_slice_array)):
-                red_slices = np.vstack(
-                    (ground_truth_slice_array[i], red_difference_slice_array[i], input_slice_array[i]))
+                red_slices = np.vstack((ground_truth_slice_array[i], red_difference_slice_array[i], input_slice_array[i]))
                 green_slices = np.vstack((ground_truth_slice_array[i], difference_slice_array[i], input_slice_array[i]))
-                blue_slices = np.vstack(
-                    (ground_truth_slice_array[i], blue_difference_slice_array[i], input_slice_array[i]))
+                blue_slices = np.vstack((ground_truth_slice_array[i], blue_difference_slice_array[i], input_slice_array[i]))
 
-                frame_image = toimage(np.array((red_slices, green_slices, blue_slices)))
+                frame_image = toimage(np.array((red_slices, green_slices, blue_slices))).convert("RGBA", dither=None, palette="WEB")
 
                 frame_image.save("{0}/{1}.png".format(output_path, str(i)))
 
                 frames.append(frame_image)
         else:
             for i in range(len(input_slice_array)):
-                frame_image = toimage(np.array((input_slice_array[i], input_slice_array[i], input_slice_array[i])))
+                frame_image = toimage(np.array((input_slice_array[i], input_slice_array[i], input_slice_array[i]))).convert("RGBA", dither=None, palette="WEB")
 
                 frame_image.save("{0}/{1}.png".format(output_path, str(i)))
 
@@ -553,18 +570,15 @@ def main():
 
             if slice_axis == 0:
                 input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[slice_position, :, :], 0)
-                input_slice = imresize(input_slice, (
-                int(round(input_slice.shape[0] * pixel_width)), int(round(input_slice.shape[1] * pixel_width))))
+                input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * pixel_width)), int(round(input_slice.shape[1] * pixel_width))))
             else:
                 if slice_axis == 1:
                     input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[:, slice_position, :], 0)
-                    input_slice = imresize(input_slice, (
-                    int(round(input_slice.shape[0] * slice_width)), int(round(input_slice.shape[1] * pixel_width))))
+                    input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * slice_width)), int(round(input_slice.shape[1] * pixel_width))))
                 else:
                     if slice_axis == 2:
                         input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[:, :, slice_position], 0)
-                        input_slice = imresize(input_slice, (
-                        int(round(input_slice.shape[0] * slice_width)), int(round(input_slice.shape[1] * pixel_width))))
+                        input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * slice_width)), int(round(input_slice.shape[1] * pixel_width))))
 
             input_slice = rescale_linear_max_min(input_slice, 0, 255)
 
@@ -578,15 +592,13 @@ def main():
                     int(round(ground_truth_slice.shape[1] * pixel_width))))
                 else:
                     if slice_axis == 2:
-                        ground_truth_slice = np.flip(
-                            pet.ImageData(ground_truth_paths[i]).as_array()[:, slice_position, :], 0)
+                        ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, slice_position, :], 0)
                         ground_truth_slice = imresize(ground_truth_slice, (
                         int(round(ground_truth_slice.shape[0] * slice_width)),
                         int(round(ground_truth_slice.shape[1] * pixel_width))))
                     else:
                         if slice_axis == 3:
-                            ground_truth_slice = np.flip(
-                                pet.ImageData(ground_truth_paths[i]).as_array()[:, :, slice_position], 0)
+                            ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, :, slice_position], 0)
                             ground_truth_slice = imresize(ground_truth_slice, (
                             int(round(ground_truth_slice.shape[0] * slice_width)),
                             int(round(ground_truth_slice.shape[1] * pixel_width))))
@@ -609,9 +621,9 @@ def main():
                 green_slices = np.vstack((ground_truth_slice, difference_slice, input_slice))
                 blue_slices = np.vstack((ground_truth_slice, blue_difference_slice, input_slice))
 
-                frame_image = toimage(np.array((red_slices, green_slices, blue_slices)))
+                frame_image = toimage(np.array((red_slices, green_slices, blue_slices))).convert("RGBA", dither=None, palette="WEB")
             else:
-                frame_image = toimage(np.array((input_slice, input_slice, input_slice)))
+                frame_image = toimage(np.array((input_slice, input_slice, input_slice))).convert("RGBA", dither=None, palette="WEB")
 
             # output png
             frame_image.save("{0}/{1}.png".format(output_path, str(i)))
@@ -620,10 +632,12 @@ def main():
 
     # output gif
     frames[0].save("{0}/{1}".format(output_path, str(output_name)), format="GIF", append_images=frames[1:],
-                   save_all=True,
-                   duration=int(round(1000 * frame_time)), loop=0)
+                   save_all=True, duration=int(round(1000 * frame_time)), optimize=False, loop=0)
+
+    np.seterr(all="raise")
 
     return True
 
 
-main()
+if __name__ == "__main__":
+    main()
