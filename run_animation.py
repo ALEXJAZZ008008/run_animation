@@ -98,7 +98,8 @@ def rescale_array_array_path(data_array):
             current_min = new_min
 
     for i in range(len(new_data_array)):
-        new_data_array[i] = rescale_linear_max_min_with_known_max_min(new_data_array[i], 0.0, 255.0, current_min, current_max)
+        new_data_array[i] = rescale_linear_max_min_with_known_max_min(new_data_array[i], 0.0, 255.0, current_min,
+                                                                      current_max)
 
     return new_data_array
 
@@ -480,15 +481,18 @@ def main(input_path=None, ground_truth_path=None, output_path=None, output_name=
 
             if slice_axis == 0:
                 input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[slice_position, :, :], 0)
-                input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * pixel_width)), int(round(input_slice.shape[1] * pixel_width))))
+                input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * pixel_width)),
+                                                     int(round(input_slice.shape[1] * pixel_width))))
             else:
                 if slice_axis == 1:
                     input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[:, slice_position, :], 0)
-                    input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * slice_width)), int(round(input_slice.shape[1] * pixel_width))))
+                    input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * slice_width)),
+                                                         int(round(input_slice.shape[1] * pixel_width))))
                 else:
                     if slice_axis == 2:
                         input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[:, :, slice_position], 0)
-                        input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * slice_width)), int(round(input_slice.shape[1] * pixel_width))))
+                        input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * slice_width)),
+                                                             int(round(input_slice.shape[1] * pixel_width))))
 
             input_slice_list.append(input_slice)
 
@@ -496,16 +500,25 @@ def main(input_path=None, ground_truth_path=None, output_path=None, output_name=
                 ground_truth_slice = None
 
                 if slice_axis == 0:
-                    ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[slice_position, :, :], 0)
-                    ground_truth_slice = imresize(ground_truth_slice, (int(round(ground_truth_slice.shape[0] * pixel_width)), int(round(ground_truth_slice.shape[1] * pixel_width))))
+                    ground_truth_slice = \
+                        np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[slice_position, :, :], 0)
+                    ground_truth_slice = imresize(ground_truth_slice,
+                                                  (int(round(ground_truth_slice.shape[0] * pixel_width)),
+                                                   int(round(ground_truth_slice.shape[1] * pixel_width))))
                 else:
                     if slice_axis == 1:
-                        ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, slice_position, :], 0)
-                        ground_truth_slice = imresize(ground_truth_slice, (int(round(ground_truth_slice.shape[0] * slice_width)), int(round(ground_truth_slice.shape[1] * pixel_width))))
+                        ground_truth_slice = \
+                            np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, slice_position, :], 0)
+                        ground_truth_slice = imresize(ground_truth_slice,
+                                                      (int(round(ground_truth_slice.shape[0] * slice_width)),
+                                                       int(round(ground_truth_slice.shape[1] * pixel_width))))
                     else:
                         if slice_axis == 2:
-                            ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, :, slice_position], 0)
-                            ground_truth_slice = imresize(ground_truth_slice, (int(round(ground_truth_slice.shape[0] * slice_width)), int(round(ground_truth_slice.shape[1] * pixel_width))))
+                            ground_truth_slice = \
+                                np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, :, slice_position], 0)
+                            ground_truth_slice = imresize(ground_truth_slice,
+                                                          (int(round(ground_truth_slice.shape[0] * slice_width)),
+                                                           int(round(ground_truth_slice.shape[1] * pixel_width))))
 
                 ground_truth_slice_list.append(ground_truth_slice)
 
@@ -547,18 +560,22 @@ def main(input_path=None, ground_truth_path=None, output_path=None, output_name=
             blue_difference_slice_array = rescale_array_array_path(blue_difference_slice_array)
 
             for i in range(len(input_slice_array)):
-                red_slices = np.vstack((ground_truth_slice_array[i], red_difference_slice_array[i], input_slice_array[i]))
+                red_slices = np.vstack((ground_truth_slice_array[i], red_difference_slice_array[i],
+                                        input_slice_array[i]))
                 green_slices = np.vstack((ground_truth_slice_array[i], difference_slice_array[i], input_slice_array[i]))
-                blue_slices = np.vstack((ground_truth_slice_array[i], blue_difference_slice_array[i], input_slice_array[i]))
+                blue_slices = np.vstack((ground_truth_slice_array[i], blue_difference_slice_array[i],
+                                         input_slice_array[i]))
 
-                frame_image = toimage(np.array((red_slices, green_slices, blue_slices))).convert("RGBA", dither=None, palette="WEB")
+                frame_image = toimage(np.array((red_slices, green_slices, blue_slices))).convert("RGBA", dither=None,
+                                                                                                 palette="WEB")
 
                 frame_image.save("{0}/{1}.png".format(output_path, str(i)))
 
                 frames.append(frame_image)
         else:
             for i in range(len(input_slice_array)):
-                frame_image = toimage(np.array((input_slice_array[i], input_slice_array[i], input_slice_array[i]))).convert("RGBA", dither=None, palette="WEB")
+                frame_image = toimage(np.array((input_slice_array[i], input_slice_array[i],
+                                                input_slice_array[i]))).convert("RGBA", dither=None, palette="WEB")
 
                 frame_image.save("{0}/{1}.png".format(output_path, str(i)))
 
@@ -570,15 +587,18 @@ def main(input_path=None, ground_truth_path=None, output_path=None, output_name=
 
             if slice_axis == 0:
                 input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[slice_position, :, :], 0)
-                input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * pixel_width)), int(round(input_slice.shape[1] * pixel_width))))
+                input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * pixel_width)),
+                                                     int(round(input_slice.shape[1] * pixel_width))))
             else:
                 if slice_axis == 1:
                     input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[:, slice_position, :], 0)
-                    input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * slice_width)), int(round(input_slice.shape[1] * pixel_width))))
+                    input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * slice_width)),
+                                                         int(round(input_slice.shape[1] * pixel_width))))
                 else:
                     if slice_axis == 2:
                         input_slice = np.flip(pet.ImageData(input_paths[i]).as_array()[:, :, slice_position], 0)
-                        input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * slice_width)), int(round(input_slice.shape[1] * pixel_width))))
+                        input_slice = imresize(input_slice, (int(round(input_slice.shape[0] * slice_width)),
+                                                             int(round(input_slice.shape[1] * pixel_width))))
 
             input_slice = rescale_linear_max_min(input_slice, 0, 255)
 
@@ -586,19 +606,22 @@ def main(input_path=None, ground_truth_path=None, output_path=None, output_name=
                 ground_truth_slice = None
 
                 if slice_axis == 1:
-                    ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[slice_position, :, :], 0)
+                    ground_truth_slice = \
+                        np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[slice_position, :, :], 0)
                     ground_truth_slice = imresize(ground_truth_slice, (
                     int(round(ground_truth_slice.shape[0] * pixel_width)),
                     int(round(ground_truth_slice.shape[1] * pixel_width))))
                 else:
                     if slice_axis == 2:
-                        ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, slice_position, :], 0)
+                        ground_truth_slice = \
+                            np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, slice_position, :], 0)
                         ground_truth_slice = imresize(ground_truth_slice, (
                         int(round(ground_truth_slice.shape[0] * slice_width)),
                         int(round(ground_truth_slice.shape[1] * pixel_width))))
                     else:
                         if slice_axis == 3:
-                            ground_truth_slice = np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, :, slice_position], 0)
+                            ground_truth_slice = \
+                                np.flip(pet.ImageData(ground_truth_paths[i]).as_array()[:, :, slice_position], 0)
                             ground_truth_slice = imresize(ground_truth_slice, (
                             int(round(ground_truth_slice.shape[0] * slice_width)),
                             int(round(ground_truth_slice.shape[1] * pixel_width))))
@@ -621,9 +644,11 @@ def main(input_path=None, ground_truth_path=None, output_path=None, output_name=
                 green_slices = np.vstack((ground_truth_slice, difference_slice, input_slice))
                 blue_slices = np.vstack((ground_truth_slice, blue_difference_slice, input_slice))
 
-                frame_image = toimage(np.array((red_slices, green_slices, blue_slices))).convert("RGBA", dither=None, palette="WEB")
+                frame_image = toimage(np.array((red_slices, green_slices, blue_slices))).convert("RGBA", dither=None,
+                                                                                                 palette="WEB")
             else:
-                frame_image = toimage(np.array((input_slice, input_slice, input_slice))).convert("RGBA", dither=None, palette="WEB")
+                frame_image = toimage(np.array((input_slice, input_slice, input_slice))).convert("RGBA", dither=None,
+                                                                                                 palette="WEB")
 
             # output png
             frame_image.save("{0}/{1}.png".format(output_path, str(i)))
